@@ -89,3 +89,34 @@ eventtypes <- c("Astronomical Low Tide",
 analysis_data <- unified_numeric_data %>%
         mutate(EVTYPE = gsub("TSTM", "Thunderstorm", EVTYPE, ignore.case = T)) %>%
         mutate(EVTYPE = eventtypes[amatch(EVTYPE, eventtypes, method = "soundex")])
+
+#analysis
+
+library(ggplot2)
+
+#human health
+casualties_by_eventtype <- analysis_data %>%
+        group_by(EVTYPE) %>%
+        summarize(totalcasualties = sum(casualties)) %>%
+        arrange(desc(totalcasualties)) %>%
+        filter(totalcasualties > 3000)          #include top 5
+
+ggplot(casualties_by_eventtype, aes(EVTYPE, totalcasualties)) +
+        geom_bar(stat = "identity") +
+        ggtitle("Impact on Population Health", subtitle = "Total casualties for the top five most harmful event types") +
+        xlab("Event Type") +
+        ylab("Total Casualties")
+
+#economic impact
+
+econimp_by_eventtype <- analysis_data %>%
+        group_by(EVTYPE) %>%
+        summarize(economicimpact = sum(economicimpact)/1000000000) %>%
+        arrange(desc(economicimpact)) %>%
+        filter(economicimpact > 17)    #include top 5
+
+ggplot(econimp_by_eventtype, aes(EVTYPE, economicimpact)) +
+        geom_bar(stat = "identity") +
+        ggtitle("Economic Impact", subtitle = "Total cost of property and crop damages for the top five most costly event types") +
+        xlab("Event Type") +
+        ylab("Total Cost (in billion US dollars)")
