@@ -12,10 +12,6 @@ subset_data <- raw_data %>%                             #subset data
         select(EVTYPE, FATALITIES:CROPDMGEXP) %>%       #choose relevant variables for analysis
         filter(FATALITIES != 0 | INJURIES !=0 | PROPDMG != 0 | CROPDMG != 0) #choose observations that resulted in casualty or damages
                         
-## Clean event type to the 48 unique types
-
-
-
 ## Clean damage costs to single, easily manipulated numbers and create casualties column
 
 numeric_exp_data <- subset_data %>%                                     #convert exp symbols to numbers
@@ -37,4 +33,57 @@ unified_numeric_data <- numeric_exp_data %>%
         mutate(casualties = FATALITIES + INJURIES) %>%
         select(!(FATALITIES:cropdamage))
 
+## Clean event type to the 48 unique types
 
+eventtypes <- c("Astronomical Low Tide", 
+                "Avalanche",
+                "Blizzard",
+                "Coastal Flood",
+                "Cold/Wind Chill",
+                "Debris Flow",
+                "Dense Fog",
+                "Dense Smoke",
+                "Drought",
+                "Dust Devil",
+                "Dust Storm",
+                "Excessive Heat",
+                "Extreme Cold/Wind Chill",
+                "Flash Flood",
+                "Flood",
+                "Frost/Freeze",
+                "Funnel Cloud",
+                "Freezing Fog",
+                "Hail",
+                "Heat",
+                "Heavy Rain",
+                "Heavy Snow",
+                "High Surf",
+                "High Wind",
+                "Hurricane (Typhoon)",
+                "Ice Storm",
+                "Lake-Effect Snow",
+                "Lakeshore Flood",
+                "Lightning",
+                "Marine Hail",
+                "Marine High Wind",
+                "Marine Strong Wind",
+                "Marine Thunderstorm Wind",
+                "Rip Current",
+                "Seiche",
+                "Sleet",
+                "Storm Surge/Tide",
+                "Strong Wind",
+                "Thunderstorm Wind",
+                "Tornado",
+                "Tropical Depression",
+                "Tropical Storm",
+                "Tsunami",
+                "Volcanic Ash",
+                "Waterspout",
+                "Wildfire",
+                "Winter Storm",
+                "Winter Weather")  
+
+analysis_data <- unified_numeric_data %>%
+        mutate(EVTYPE = gsub("TSTM", "Thunderstorm", EVTYPE, ignore.case = T)) %>%
+        mutate(EVTYPE = eventtypes[amatch(EVTYPE, eventtypes, method = "soundex")])
