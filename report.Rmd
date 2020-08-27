@@ -56,6 +56,63 @@ unified_numeric_data <- numeric_exp_data %>%
         select(!(FATALITIES:cropdamage))
 ```
 
+Finally, I matched the event types input into the database (in column EVTYPE) with those provided in the documentation. I used the "amatch" function from the "stringdist" package to accomplish this. I experimented with several matching methods and maximum distances, and lanaded on the 'soundex' method as the most effective. The soundex method compares two strings based on phonetics. I mapped events recorded in the database to those from the official list if they were phonetically identical, otherwise NA was produced. This resulted in only 1795 NAs out of 201,318 recorded events. (As "TSTM" was a common abbreviation for thunderstorm, I made this substitution before running amatch.)
 
+```{r cleanest}
+library(stringdist)
+
+eventtypes <- c("Astronomical Low Tide", 
+                "Avalanche",
+                "Blizzard",
+                "Coastal Flood",
+                "Cold/Wind Chill",
+                "Debris Flow",
+                "Dense Fog",
+                "Dense Smoke",
+                "Drought",
+                "Dust Devil",
+                "Dust Storm",
+                "Excessive Heat",
+                "Extreme Cold/Wind Chill",
+                "Flash Flood",
+                "Flood",
+                "Frost/Freeze",
+                "Funnel Cloud",
+                "Freezing Fog",
+                "Hail",
+                "Heat",
+                "Heavy Rain",
+                "Heavy Snow",
+                "High Surf",
+                "High Wind",
+                "Hurricane (Typhoon)",
+                "Ice Storm",
+                "Lake-Effect Snow",
+                "Lakeshore Flood",
+                "Lightning",
+                "Marine Hail",
+                "Marine High Wind",
+                "Marine Strong Wind",
+                "Marine Thunderstorm Wind",
+                "Rip Current",
+                "Seiche",
+                "Sleet",
+                "Storm Surge/Tide",
+                "Strong Wind",
+                "Thunderstorm Wind",
+                "Tornado",
+                "Tropical Depression",
+                "Tropical Storm",
+                "Tsunami",
+                "Volcanic Ash",
+                "Waterspout",
+                "Wildfire",
+                "Winter Storm",
+                "Winter Weather")  
+
+analysis_data <- unified_numeric_data %>%
+        mutate(EVTYPE = gsub("TSTM", "Thunderstorm", EVTYPE, ignore.case = T)) %>%
+        mutate(EVTYPE = eventtypes[amatch(EVTYPE, eventtypes, method = "soundex")])
+```
 
 ## Results
