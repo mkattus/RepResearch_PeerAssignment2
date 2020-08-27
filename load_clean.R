@@ -35,6 +35,8 @@ unified_numeric_data <- numeric_exp_data %>%
 
 ## Clean event type to the 48 unique types
 
+library(stringdist)
+
 eventtypes <- c("Astronomical Low Tide", 
                 "Avalanche",
                 "Blizzard",
