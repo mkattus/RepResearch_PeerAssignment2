@@ -99,7 +99,7 @@ casualties_by_eventtype <- analysis_data %>%
         group_by(EVTYPE) %>%
         summarize(totalcasualties = sum(casualties)) %>%
         arrange(desc(totalcasualties)) %>%
-        filter(totalcasualties > 3000)          #include top 5
+        filter(totalcasualties > 3000)          #include only top 5 event types
 
 ggplot(casualties_by_eventtype, aes(EVTYPE, totalcasualties)) +
         geom_bar(stat = "identity") +
@@ -113,7 +113,7 @@ econimp_by_eventtype <- analysis_data %>%
         group_by(EVTYPE) %>%
         summarize(economicimpact = sum(economicimpact)/1000000000) %>%
         arrange(desc(economicimpact)) %>%
-        filter(economicimpact > 17)    #include top 5
+        filter(economicimpact > 17)    #include only top 5 event types
 
 ggplot(econimp_by_eventtype, aes(EVTYPE, economicimpact)) +
         geom_bar(stat = "identity") +
