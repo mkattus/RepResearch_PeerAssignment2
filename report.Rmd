@@ -1,11 +1,11 @@
 ---
-title: "The Economic and Health Impacts of Severe Weather"
+title: "The Economic and Health Impacts of Severe Weather Events"
 output: html_document
 ---
 
-## Synopsis
+## Synopsis:
 
-
+My analysis of NOAA's storm database shows that Tornado's are the most harmful weather event type to population health, followed by excessive heat and flooding. I came to this conclusion by considering harm to population health as the sum of fatalities and injuries. Flooding causes the greatest economic impact, followed by hurricanes and storm surge. I came to this conclusion by considering economic impact as the sum of total property damage and total crop damage. NOAA's storm database is quite messy and contains many variables irrelevant to this analysis, so most of the data processing consisted of cleaning up the data: matching inconsistent event labeling, removing variables irrelevant to the questions being asked, and removing data points that did not contribute to damages.    
 
 ## Data Processing
 
@@ -16,7 +16,7 @@ download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.
 raw_data <- read.csv("StormData.csv.bz2")
 ```
 
-Before 1996, NOAA only used this database to record tornado events. The purpose of this assignment is to compare human and economic impacts across event types, so I subset the analysis data to include only observations in the year 1996 and later (this first required converting date information from character class to POSIXct), and variables relevant to the assignment: event type ('EVTYPE'), fatalities, injuries, property damage ('PROPDMG' and 'PROPDMGEXP') and crop damage ('CROPDMG' and 'CROPDMGEXP'). Information regarding time, location, intensity, etc. are not relevant to the analysis of this project, so associated variables were removed from the analysis data. Additionally, I filtered out observations where casualties (fatalities and injuries) and damages (property or crop) were zero, since they would not contribute to the overall health or economic impact.  
+Before 1996, NOAA only used this database to record tornado events. The purpose of this assignment is to compare human and economic impacts across event types -- this makes no sense when only one event type is recorded -- so I subset the analysis data to include only observations in the year 1996 and later (this first required converting date information from character class to POSIXct), and variables relevant to the assignment: event type ('EVTYPE'), fatalities, injuries, property damage ('PROPDMG' and 'PROPDMGEXP') and crop damage ('CROPDMG' and 'CROPDMGEXP'). Information regarding time, location, intensity, etc. are not relevant to the analysis of this project, so associated variables were removed from the analysis data. Additionally, I filtered out observations where casualties (fatalities and injuries) and damages (property or crop) were zero, since they would not contribute to the overall health or economic impact.  
 
 ```{r subset}
 library(lubridate)
@@ -56,7 +56,7 @@ unified_numeric_data <- numeric_exp_data %>%
         select(!(FATALITIES:cropdamage))
 ```
 
-Finally, I matched the event types input into the database (in column EVTYPE) with those provided in the documentation. I used the "amatch" function from the "stringdist" package to accomplish this. I experimented with several matching methods and maximum distances, and lanaded on the 'soundex' method as the most effective. The soundex method compares two strings based on phonetics. I mapped events recorded in the database to those from the official list if they were phonetically identical, otherwise NA was produced. This resulted in only 1795 NAs out of 201,318 recorded events. (As "TSTM" was a common abbreviation for thunderstorm, I made this substitution before running amatch.)
+Finally, I matched the event types input into the database (in column EVTYPE) with those provided in the documentation. I used the "amatch" function from the "stringdist" package to accomplish this. I experimented with several matching methods and maximum distances, and landed on the 'soundex' method as the most effective. The soundex method compares two strings based on phonetics. I mapped events recorded in the database to those from the official list if they were phonetically identical, otherwise NA was produced. This resulted in only 1795 NAs out of 201,318 recorded events, a negligible amount. (As "TSTM" was a common abbreviation for thunderstorm, I made this substitution before running amatch.)
 
 ```{r cleanest}
 library(stringdist)
@@ -116,3 +116,56 @@ analysis_data <- unified_numeric_data %>%
 ```
 
 ## Results
+
+### Impact on population health by event type:
+
+Use tidyverse methods to show total casualties by event type arranged in descending order:
+
+```{r}
+casualties_by_eventtype <- analysis_data %>%
+        group_by(EVTYPE) %>%
+        summarize(totalcasualties = sum(casualties)) %>%
+        arrange(desc(totalcasualties))
+
+casualties_by_eventtype
+```
+
+Plot top five event types most harmful to population health:
+
+```{r health plot}
+library(ggplot2)
+top_casualties_by_eventtype <- casualties_by_eventtype %>%
+        filter(totalcasualties > 3000)          #include only top 5 event types
+ggplot(top_casualties_by_eventtype, aes(EVTYPE, totalcasualties)) +
+        geom_bar(stat = "identity") +
+        ggtitle("Impact on Population Health", subtitle = "Total casualties for the top five most harmful event types") +
+        xlab("Event Type") +
+        ylab("Total Casualties")
+```
+
+
+### Economic impact in billions of US dollars:
+
+Use tidyverse methods to show total economic damages (in billions of US Dollars) by event type arranged in descending order:
+
+```{r}
+econimp_by_eventtype <- analysis_data %>%
+        group_by(EVTYPE) %>%
+        summarize(economicimpact = sum(economicimpact)/1000000000) %>%
+        arrange(desc(economicimpact))
+
+econimp_by_eventtype
+```
+
+Plot top five event types with the greatest economic impact:
+
+```{r econ plot}
+top_econimp_by_eventtype <- econimp_by_eventtype %>%
+        filter(economicimpact > 17)    #include only top 5 event types
+ggplot(top_econimp_by_eventtype, aes(EVTYPE, economicimpact)) +
+        geom_bar(stat = "identity") +
+        ggtitle("Economic Impact", subtitle = "Total cost of property and crop damages for the top five most costly event types") +
+        xlab("Event Type") +
+        ylab("Total Cost (in billion US dollars)")
+```
+
